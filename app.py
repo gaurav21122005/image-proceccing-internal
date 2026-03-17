@@ -3,11 +3,9 @@ import cv2
 import numpy as np
 from PIL import Image
 
-# ---------------------- Page Config ----------------------
 st.set_page_config(page_title="Cartoonify", page_icon="🎨")
 st.title("🎨 Cartoonify — Image Processing Demo")
 
-# ---------------------- Sidebar Parameters ----------------------
 st.sidebar.header("Cartoonify Parameters")
 
 num_bilateral = st.sidebar.slider("Number of Bilateral Filters", 1, 20, 7)
@@ -18,16 +16,13 @@ median_blur_ksize = st.sidebar.slider("Median Blur Ksize (odd)", 1, 31, 7)
 edge_block_size = st.sidebar.slider("Edge Block Size (odd)", 3, 31, 9)
 edge_C = st.sidebar.slider("Edge Threshold C", 1, 10, 2)
 
-# Ensure odd numbers
 if median_blur_ksize % 2 == 0:
     median_blur_ksize += 1
 if edge_block_size % 2 == 0:
     edge_block_size += 1
 
-# ---------------------- File Upload ----------------------
 uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg", "webp"])
 
-# ---------------------- Cartoonify Function ----------------------
 def cartoonify_image(img_bgr, num_bilateral, d, sigma_color, sigma_space, median_blur_ksize, edge_block_size, edge_C):
     if img_bgr is None:
         return None
@@ -39,16 +34,13 @@ def cartoonify_image(img_bgr, num_bilateral, d, sigma_color, sigma_space, median
         scale = max_dim / max(h, w)
         img_bgr = cv2.resize(img_bgr, (int(w*scale), int(h*scale)), interpolation=cv2.INTER_AREA)
 
-    # Bilateral filter for smooth colors
     img_color = img_bgr.copy()
     for _ in range(max(1, int(num_bilateral))):
         img_color = cv2.bilateralFilter(img_color, d=d, sigmaColor=sigma_color, sigmaSpace=sigma_space)
 
-    # Convert to grayscale and blur
     img_gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.medianBlur(img_gray, median_blur_ksize)
 
-    # Detect edges
     edges = cv2.adaptiveThreshold(img_blur, 255,
                                   cv2.ADAPTIVE_THRESH_MEAN_C,
                                   cv2.THRESH_BINARY,
@@ -56,11 +48,10 @@ def cartoonify_image(img_bgr, num_bilateral, d, sigma_color, sigma_space, median
                                   edge_C)
     edges_colored = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
 
-    # Combine color image with edges
     cartoon = cv2.bitwise_and(img_color, edges_colored)
     return cartoon
 
-# ---------------------- Process Image ----------------------
+
 if uploaded_file is not None:
     try:
         # Convert uploaded file to OpenCV image
@@ -75,7 +66,7 @@ if uploaded_file is not None:
                 median_blur_ksize, edge_block_size, edge_C
             )
 
-            # Show images using Streamlit
+           
             st.subheader("Original Image")
             st.image(cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB), caption="Original Image", width=None)
 
